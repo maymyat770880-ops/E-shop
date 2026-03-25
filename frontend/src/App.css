@@ -1,0 +1,126 @@
+/* App.css ထဲက hero-section နေရာမှာ ပြန်ပြင်မယ် */
+.hero-section {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+                      url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=2070');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    /* Padding ကို ၁၀၀ ကနေ ၄၀ ကို လျှော့ချမယ် */
+    padding: 40px 0; 
+    border-radius: 0 0 20px 20px;
+    margin-bottom: 30px; /* အောက်က Card တွေနဲ့ ကပ်အောင် margin လျှော့မယ် */
+    color: white;
+}
+
+/* Hero Title ကို သေးအောင်လုပ်မယ် */
+.hero-section h1 {
+    font-size: 32px !important; /* display-3 ကနေ သေးအောင်ပြင်မယ် */
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+/* Sub Title ကို သေးအောင်လုပ်မယ် */
+.hero-section p {
+    font-size: 16px !important;
+    opacity: 0.9;
+    margin-bottom: 20px;
+}
+
+
+
+/* Card တွေအကုန်လုံး အမြင့်တူအောင်ညှိမယ် */
+.product-card {
+  border: none;
+  border-radius: 15px;
+  /* အနားလေးတွေ နည်းနည်းဝိုင်းမယ် */
+  transition: all 0.3s ease;
+  background: #fff;
+  overflow: hidden;
+  height: 100%;
+  /* Card ရဲ့အမြင့်ကို Row အတိုင်း တူအောင်လုပ်မယ် */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Card ကို Mouse တင်ရင် ကြွတက်လာတဲ့ Animation */
+.product-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ပုံတွေကို Size ညှိမယ် */
+.product-image {
+  height: 220px;
+  /* ပုံတွေအကုန်လုံးကို အမြင့်တူအောင်ညှိမယ် */
+  object-fit: cover;
+  /* ပုံမပျက်ဘဲ ကွက်တိဖြစ်အောင်လုပ်မယ် */
+  border-bottom: 1px solid #f0f0f0;
+  /* ပုံအောက်မှာ လိုင်းလေးထည့်မယ် */
+}
+
+/* စာသားတွေနေရာ တကျဖြစ်အောင် */
+.card-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  /* စာသားနဲ့ Button ကို ခွဲထားမယ် */
+}
+
+/* Description က ရှည်ရင် '...' ပြအောင်လုပ်မယ် */
+.product-description {
+  color: #6c757d;
+  font-size: 14px;
+  height: 40px;
+  /* လိုင်းနှစ်လိုင်းစာပဲ ပြမယ် */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  /* လိုင်းအရေအတွက် သတ်မှတ်မယ် */
+  -webkit-box-orient: vertical;
+  margin-bottom: 15px;
+}
+
+/* Price Badge Style */
+.price-badge {
+  background-color: #f8f9fa;
+  color: #212529;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid #e0e0e0;
+}
+
+footer {
+    background-color: #1a1a1a !important; /* ပိုရင့်တဲ့အမည်းရောင် */
+    padding: 20px 0 !important; /* အပေါ်အောက် အကွာအဝေးကို အနည်းဆုံးဖြစ်အောင် လျှော့ချမယ် */
+}
+
+footer h5 {
+    font-size: 18px;
+    letter-spacing: 1px;
+}
+
+footer .nav-link:hover {
+    color: white !important;
+}
+
+/* ပုံမှန် link အရောင် (မှိန်ထားမယ်) */
+.nav-link {
+    color: #444444 !important; /* နည်းနည်းမှိန်တဲ့ မီးခိုးရောင် */
+    font-weight: 600;
+    margin: 0 5px;
+    transition: all 0.3s ease;
+}
+
+/* လက်ရှိ page မှာ ရှိနေရင် လင်းနေမယ့် အရောင် (Active State) */
+.active-link {
+    color: #000000 !important; /* အမည်းရောင် တောက်တောက် */
+    font-weight: 700 !important;
+    border-bottom: 2px solid #000000; /* အောက်က မြဉ်းလေးနဲ့ ဆိုရင် ပိုသိသာတယ် */
+}
+
+/* Mouse တင်လိုက်ရင်လည်း လင်းလာစေဖို့ */
+.nav-link:hover {
+    color: #000000 !important;
+}
