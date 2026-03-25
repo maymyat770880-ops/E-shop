@@ -330,7 +330,7 @@ function Checkout() {
         }
 
         try {
-            const response = await axios.post('https://e-shop-npm.vercel.app/orders', {
+            const response = await axios.post('https://e-shop-npm.vercel.app/api/orders', {
                 name: fullName,
                 phone: phoneNumber,
                 address: address,

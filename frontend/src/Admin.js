@@ -45,12 +45,12 @@ function Admin() {
 
     const [allReviews, setAllReviews] = useState([]);
     const fetchAllReviews = async () => {
-    const res = await axios.get('https://e-shop-npm.vercel.app/all-reviews');
+    const res = await axios.get('https://e-shop-npm.vercel.app/api/all-reviews');
     setAllReviews(res.data);
 };
 const deleteReview = async (id) => {
     if(window.confirm("Are you sure you want to delete this review?")) {
-        await axios.delete(`https://e-shop-npm.vercel.app/reviews/${id}`);
+        await axios.delete(`https://e-shop-npm.vercel.app/api/reviews/${id}`);
         fetchAllReviews(); // list ကို refresh လုပ်မယ်
     }
 };
@@ -63,7 +63,7 @@ useEffect(()=>{
         const newStatus = currentStatus === 'Pending' ? 'Delivered' : 'Pending';
 
         try {
-            const response = await fetch(`https://e-shop-npm.vercel.app/orders/${orderId}/status`, {
+            const response = await fetch(`https://e-shop-npm.vercel.app/api/orders/${orderId}/status`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus }),
@@ -80,19 +80,19 @@ useEffect(()=>{
 
     // --- Data Fetching Functions ---
     const fetchProducts = () => {
-        axios.get('https://e-shop-npm.vercel.app/products')
+        axios.get('https://e-shop-npm.vercel.app/api/products')
             .then(res => setProducts(res.data))
             .catch(err => console.error("Error fetching products:", err));
     };
 
     const fetchOrders = () => {
-        axios.get('https://e-shop-npm.vercel.app/orders')
+        axios.get('https://e-shop-npm.vercel.app/api/orders')
             .then(res => setOrders(res.data))
             .catch(err => console.error("Error fetching orders:", err));
     };
 
     const fetchMessages = () => {
-        axios.get('https://e-shop-npm.vercel.app/messages')
+        axios.get('https://e-shop-npm.vercel.app/api/messages')
             .then(res => setMessages(res.data))
             .catch(err => console.error("Error fetching messages:", err));
     };
@@ -123,7 +123,7 @@ useEffect(()=>{
         if (isEditing) {
             // --- (၁) Edit လုပ်မည့်အပိုင်း (PUT) ---
             try {
-                const response = await fetch(`https://e-shop-npm.vercel.app/products/${currentId}`, {
+                const response = await fetch(`https://e-shop-npm.vercel.app/api/products/${currentId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(productData),
@@ -138,7 +138,7 @@ useEffect(()=>{
         } else {
             // --- (၂) ဒီနေရာမှာ နင့်ရဲ့ မူရင်း Upload code ကို ထည့်ရမှာပါ (POST) ---
             try {
-                const response = await fetch('https://e-shop-npm.vercel.app/products', {
+                const response = await fetch('https://e-shop-npm.vercel.app/api/products', {
                     method: 'POST', // အသစ်ထည့်တာဖြစ်လို့ POST သုံးထားတာကို ရှာပါ
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(productData),
@@ -154,7 +154,7 @@ useEffect(()=>{
 
     const deleteProduct = (id) => {
         if (window.confirm("Are you sure you want to delete this product?")) {
-            axios.delete(`https://e-shop-npm.vercel.app/products/${id}`)
+            axios.delete(`https://e-shop-npm.vercel.app/api/products/${id}`)
                 .then(() => {
                     alert("Deleted!");
                     fetchProducts();
@@ -166,7 +166,7 @@ useEffect(()=>{
     // Mark as Read လုပ်ဖို့
     const markAsRead = async (id) => {
         try {
-            const response = await fetch(`https://e-shop-npm.vercel.app/contacts/${id}/read`, { method: 'PUT' });
+            const response = await fetch(`https://e-shop-npm.vercel.app/api/contacts/${id}/read`, { method: 'PUT' });
             if (response.ok) fetchMessages(); // data ပြန်ခေါ်ဖို့
         } catch (err) { console.log(err); }
     };
@@ -175,7 +175,7 @@ useEffect(()=>{
     const deleteMessage = async (id) => {
         if (window.confirm("Are you sure you want to delete this?")) {
             try {
-                const response = await fetch(`https://e-shop-npm.vercel.app/contacts/${id}`, { method: 'DELETE' });
+                const response = await fetch(`https://e-shop-npm.vercel.app/api/contacts/${id}`, { method: 'DELETE' });
                 if (response.ok) fetchMessages();
             } catch (err) { console.log(err); }
         }

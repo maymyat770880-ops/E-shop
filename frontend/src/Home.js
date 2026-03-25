@@ -11,7 +11,7 @@ function Home() {
     const { addToCart } = useCart();
 
     useEffect(() => {
-        axios.get('https://e-shop-npm.vercel.app/products')
+        axios.get('https://e-shop-npm.vercel.app/api/products')
             .then(res => setProducts(res.data))
             .catch(err => console.error(err));
     }, []);

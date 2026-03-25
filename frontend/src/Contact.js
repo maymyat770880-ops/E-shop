@@ -12,7 +12,7 @@ function Contact() {
         e.preventDefault(); // Page refresh မဖြစ်အောင် တားတာ
         
         try {
-            const response = await axios.post('https://e-shop-npm.vercel.app/contact', {
+            const response = await axios.post('https://e-shop-npm.vercel.app/api/contact', {
                 name: fullName,
                 email: email,
                 message: message

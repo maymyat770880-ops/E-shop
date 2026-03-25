@@ -12,7 +12,7 @@ function Signup() {
     const handleSignup = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('https://e-shop-npm.vercel.app/register', { username, email, password });
+            await axios.post('https://e-shop-npm.vercel.app/api/register', { username, email, password });
             
             // --- ပြင်ဆင်လိုက်သည့်အပိုင်း ---
             // ၁။ အောင်မြင်ရင် user name ကို သိမ်းလိုက်မယ်

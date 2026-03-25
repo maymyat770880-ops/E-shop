@@ -16,7 +16,7 @@ function ProductDetail({ addToCart }) {
 
     const fetchReviews = async () => {
         try {
-            const res = await axios.get(`https://e-shop-npm.vercel.app/reviews/${id}`);
+            const res = await axios.get(`https://e-shop-npm.vercel.app/api/reviews/${id}`);
             setReviews(res.data);
         } catch (err) {
             console.log("Error fetching reviews:", err);
@@ -29,7 +29,7 @@ function ProductDetail({ addToCart }) {
     const handleReplySubmit = async (e, parentId) => {
         e.preventDefault();
         try {
-            await axios.post('https://e-shop-npm.vercel.app/reviews', {
+            await axios.post('https://e-shop-npm.vercel.app/api/reviews', {
                 product_id: id,
                 user_name: userName,
                 comment: comment,
@@ -45,7 +45,7 @@ function ProductDetail({ addToCart }) {
 
     useEffect(() => {
         console.log("Fetching product with ID:", id);
-        axios.get(`https://e-shop-npm.vercel.app/products/${id}`)
+        axios.get(`https://e-shop-npm.vercel.app/api/products/${id}`)
             .then(res => {
                 setProduct(res.data);
                 fetchReviews(); // ပစ္စည်းရတာနဲ့ review ပါ တစ်ခါတည်းခေါ်မယ်
@@ -61,7 +61,7 @@ function ProductDetail({ addToCart }) {
     const handleReviewSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('https://e-shop-npm.vercel.app/reviews', {
+            await axios.post('https://e-shop-npm.vercel.app/api/reviews', {
                 product_id: id,
                 user_name: userName,
                 comment: comment,
