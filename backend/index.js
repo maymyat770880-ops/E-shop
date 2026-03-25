@@ -4,6 +4,11 @@ const bcrypt = require('bcryptjs');
 const cors = require('cors');
 // require('dotenv').config();
 
+try {
+    require('dotenv').config();
+} catch (e) {
+    console.log("Dotenv not found, using system variables");
+}
 const db = mysql.createConnection({
   host: process.env.MYSQLHOST,
   user: process.env.MYSQLUSER,
@@ -18,13 +23,12 @@ app.use(express.json());
 
 
 
-// Connection စစ်ဆေးခြင်း
-db.getConnection((err, connection) => {
-    if (err) console.error("DB Error:", err);
-    else {
-        console.log("Connected to elite-shop Database!");
-        connection.release();
-    }
+db.connect((err) => {
+  if (err) {
+    console.error('Database connection failed:', err);
+    return;
+  }
+  console.log('Connected to Railway Database!');
 });
 
 // --- Register API ---
