@@ -4,17 +4,19 @@ const bcrypt = require('bcryptjs');
 const cors = require('cors');
 require('dotenv').config();
 
+const db = mysql.createConnection({
+  host: process.env.MYSQLHOST,
+  user: process.env.MYSQLUSER,
+  password: process.env.MYSQLPASSWORD,
+  database: process.env.MYSQLDATABASE,
+  port: process.env.MYSQLPORT || 3306
+});
+
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// MySQL Connection Setup - သင့်ရဲ့ elite-shop database နဲ့ ချိတ်ဆက်ခြင်း
-const db = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: '', 
-    database: 'elite-shop' // ဒီနာမည်ကို သင့် database နာမည်အတိုင်း ပြင်ထားပါတယ်
-});
+
 
 // Connection စစ်ဆေးခြင်း
 db.getConnection((err, connection) => {
