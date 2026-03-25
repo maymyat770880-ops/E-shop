@@ -12,7 +12,7 @@ function Shop() {
     const [searchTerm,setSearchTerm] = useState("");
 
     useEffect(() => {
-        axios.get('http://localhost:5000/api/products')
+        axios.get('https://e-shop-npm.vercel.app/products')
             .then(res => setProducts(res.data))
             .catch(err => console.error(err));
     }, []);
