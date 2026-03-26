@@ -278,6 +278,19 @@ db.connect((err) => {
   console.log('Connected to Supabase Database successfully!');
 });
 
+// အရင်ရှိတဲ့ db.connect အောက်မှာ ဒါလေးကို ထပ်ထည့်ပါ
+db.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1);
+});
+
+db.connect((err) => {
+  if (err) {
+    return console.error('Supabase connection failed:', err.message);
+  }
+  console.log('Connected to Supabase Database successfully!');
+});
+
 // --- Register API ---
 app.post('/api/register', async (req, res) => {
     try {
