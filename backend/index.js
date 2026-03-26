@@ -10,18 +10,14 @@ app.use(cors());
 app.use(express.json());
 
 app.use(cors({
-    origin: "*", // စမ်းသပ်ဆဲကာလမှာ အကုန်လုံးကို ခွင့်ပြုပေးလိုက်တာပါ
+    origin: ["https://cyber-gadgets-ecommerce.vercel.app", "http://localhost:3000"], 
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
 }));
 
 
 
-app.use(cors({
-    origin: ["https://cyber-gadgets-ecommerce.vercel.app"], // နင့်ရဲ့ Frontend Link အစစ်
-    methods: ["POST", "GET", "PUT", "DELETE"],
-    credentials: true
-}));
+
 
 try {
     require('dotenv').config();
@@ -120,9 +116,9 @@ app.get('/api/products/:id', (req, res) => {
     const productId = req.params.id; 
     
     // products table ထဲမှာ id က productId နဲ့ တူတာကို ရှာခိုင်းတဲ့ SQL syntax ပါ
-    const sql = `SELECT * FROM products WHERE id = ${productId}`; // ? နေရာမှာ တိုက်ရိုက်အစားထိုးလိုက်တယ်
+    const sql = `SELECT * FROM products WHERE id = ?`; // ? နေရာမှာ တိုက်ရိုက်အစားထိုးလိုက်တယ်
     
-    db.query(sql, (err, data) => {
+    db.query(sql, [productId],(err, data) => {
         if (err) {
             console.error("Database connection error or query failed:", err); // console မှာ error ပြအောင် လုပ်ထားတယ်
             return res.status(500).json({ error: "Server Database Error", details: err });
@@ -271,4 +267,5 @@ app.delete('/api/reviews/:id', (req, res) => {
 });
 
 
-app.listen(5000, () => console.log("Server running on port 3000"));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
