@@ -4,6 +4,12 @@ const bcrypt = require('bcryptjs');
 const cors = require('cors');
 // require('dotenv').config();
 
+app.use(cors({
+    origin: ["https://cyber-gadgets-ecommerce.vercel.app"], // နင့်ရဲ့ Frontend Link အစစ်
+    methods: ["POST", "GET", "PUT", "DELETE"],
+    credentials: true
+}));
+
 try {
     require('dotenv').config();
 } catch (e) {
