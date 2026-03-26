@@ -269,7 +269,7 @@ app.use(cors({
 
 // --- Database Connection ---
 const db = new Pool({
-  connectionString: 'postgresql://postgres:CyberGadget@2026@db.lawzwstbftiawplrweyk.supabase.co:5432/postgres',
+  connectionString: 'postgresql://postgres:CyberGadget%2026@db.lawzwstbftiawplrweyk.supabase.co:5432/postgres',
   ssl: { rejectUnauthorized: false }
 });
 
