@@ -1,8 +1,12 @@
 const express = require('express');
+const app =express();
 const mysql = require('mysql2');
 const bcrypt = require('bcryptjs');
 const cors = require('cors');
 // require('dotenv').config();
+
+app.use(cors());
+app.use(express.json());
 
 app.use(cors({
     origin: ["https://cyber-gadgets-ecommerce.vercel.app"], // နင့်ရဲ့ Frontend Link အစစ်
@@ -23,9 +27,8 @@ const db = mysql.createConnection({
   port: process.env.MYSQLPORT || 3306
 });
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+
+
 
 
 
