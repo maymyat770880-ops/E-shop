@@ -260,6 +260,8 @@ const bcrypt = require('bcryptjs');
 const cors = require('cors');
 require('dotenv').config();
 
+
+
 app.use(express.json());
 app.use(cors({
     origin: ["https://cyber-gadgets-ecommerce.vercel.app", "http://localhost:3000"], 
