@@ -271,7 +271,7 @@ app.use(cors({
 
 // --- Database Connection ---
 const db = new Pool({
-  connectionString: 'postgresql://postgres:CyberGadget@2026@db.lawzwstbftiawplrweyk.supabase.co:5432/postgres',
+  connectionString: 'postgresql://postgres.lawzwstbftiawplrweyk:CyberGadget@2026@aws-1-ap-south-1.pooler.supabase.com:6543/postgres',
   ssl: { rejectUnauthorized: false }
 });
 
