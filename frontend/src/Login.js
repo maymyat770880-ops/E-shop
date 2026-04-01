@@ -5,42 +5,71 @@ import { supabase } from './supabaseClient';
 function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [username, setUsername] = useState('');
+    const [isLogin, setIsLogin] = useState(true); // true = Login, false = Register
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    // Admin email ကို သတ်မှတ်ထားတယ်
     const ADMIN_EMAIL = 'admin@cybergadgets.com';
 
-    const handleLogin = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
 
         try {
-            // Supabase Auth နဲ့ Login
-            const { error } = await supabase.auth.signInWithPassword({
-                email,
-                password
-            });
-            
-            if (error) throw error;
-            
-            // Admin email နဲ့မှ ဝင်လို့ရမယ်
-            if (email === ADMIN_EMAIL) {
-                localStorage.setItem('isAuthenticated', 'true');
-                localStorage.setItem('adminEmail', email);
-                alert('Admin Login successful!');
-                navigate('/admin');
+            if (isLogin) {
+                // ========== LOGIN ==========
+                const { error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+                
+                if (error) throw error;
+                
+                // Admin email နဲ့မှ ဝင်လို့ရမယ်
+                if (email === ADMIN_EMAIL) {
+                    localStorage.setItem('isAuthenticated', 'true');
+                    localStorage.setItem('adminEmail', email);
+                    alert('Admin Login successful!');
+                    navigate('/admin');
+                } else {
+                    await supabase.auth.signOut();
+                    setError('Access denied. Admin only.');
+                }
+                
             } else {
-                // Admin မဟုတ်ရင် logout လုပ်ပြီး ပြန်ထုတ်
-                await supabase.auth.signOut();
-                setError('Access denied. Admin only.');
+                // ========== REGISTER ==========
+                const { error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: {
+                            username: username,
+                            full_name: username
+                        }
+                    }
+                });
+                
+                if (error) throw error;
+                
+                alert('Registration successful! You can now login.');
+                setIsLogin(true);
+                setEmail('');
+                setPassword('');
+                setUsername('');
             }
             
         } catch (err) {
             console.error('Auth error:', err);
-            setError('Invalid email or password');
+            if (err.message.includes('already registered')) {
+                setError('Email already exists. Please login instead.');
+            } else if (err.message.includes('Invalid login')) {
+                setError('Invalid email or password');
+            } else {
+                setError(err.message);
+            }
         } finally {
             setLoading(false);
         }
@@ -51,7 +80,9 @@ function Login() {
             <div className="row justify-content-center">
                 <div className="col-md-4">
                     <div className="card shadow-lg p-4" style={{ borderRadius: '20px' }}>
-                        <h3 className="text-center fw-bold mb-4">Admin Login</h3>
+                        <h3 className="text-center fw-bold mb-4">
+                            {isLogin ? 'Admin Login' : 'Create Account'}
+                        </h3>
                         
                         {error && (
                             <div className="alert alert-danger py-2">
@@ -59,9 +90,22 @@ function Login() {
                             </div>
                         )}
                         
-                        <form onSubmit={handleLogin}>
+                        <form onSubmit={handleSubmit}>
+                            {!isLogin && (
+                                <div className="mb-3">
+                                    <label className="form-label">Username</label>
+                                    <input 
+                                        type="text" 
+                                        className="form-control" 
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                        placeholder="Enter username"
+                                        required
+                                    />
+                                </div>
+                            )}
                             <div className="mb-3">
-                                <label className="form-label">Admin Email</label>
+                                <label className="form-label">Email Address</label>
                                 <input 
                                     type="email" 
                                     className="form-control" 
@@ -88,11 +132,21 @@ function Login() {
                                 style={{ borderRadius: '10px' }}
                                 disabled={loading}
                             >
-                                {loading ? 'Logging in...' : 'Login'}
+                                {loading ? 'Processing...' : (isLogin ? 'Login' : 'Create Account')}
                             </button>
                         </form>
                         
-                        
+                        <div className="text-center mt-3">
+                            <button
+                                className="btn btn-link p-0"
+                                onClick={() => {
+                                    setIsLogin(!isLogin);
+                                    setError('');
+                                }}
+                            >
+                                {isLogin ? "Don't have an account? Register" : "Already have an account? Login"}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
