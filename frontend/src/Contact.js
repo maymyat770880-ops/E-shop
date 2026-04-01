@@ -1,33 +1,45 @@
-import React, { useState } from 'react'; // useState ထည့်လိုက်တယ်
-import axios from 'axios'; // axios ထည့်လိုက်တယ်
+import React, { useState } from 'react';
+import { supabase } from './supabaseClient';
 
 function Contact() {
     // ၁။ User ရိုက်သမျှစာတွေကို သိမ်းဖို့ State တွေဆောက်မယ်
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
+    const [loading, setLoading] = useState(false);
 
     // ၂။ Send ခလုတ်နှိပ်ရင် အလုပ်လုပ်မယ့် Function
     const handleSendMessage = async (e) => {
         e.preventDefault(); // Page refresh မဖြစ်အောင် တားတာ
         
+        setLoading(true);
+        
         try {
-            const response = await axios.post('https://e-shop-npm.vercel.app/api/contact', {
-                name: fullName,
-                email: email,
-                message: message
-            });
+            const { error } = await supabase
+                .from('contacts')
+                .insert([
+                    {
+                        name: fullName,
+                        email: email,
+                        message: message,
+                        is_read: false,
+                        created_at: new Date().toISOString()
+                    }
+                ]);
 
-            if (response.status === 200) {
-                alert("Message Sent Successfully! 📩");
-                // စာပို့ပြီးရင် input တွေကို ပြန်ရှင်းထုတ်မယ်
-                setFullName('');
-                setEmail('');
-                setMessage('');
-            }
+            if (error) throw error;
+
+            alert("Message Sent Successfully! 📩");
+            // စာပို့ပြီးရင် input တွေကို ပြန်ရှင်းထုတ်မယ်
+            setFullName('');
+            setEmail('');
+            setMessage('');
+            
         } catch (err) {
             console.error("Error sending message:", err);
-            alert("စာပို့လို့ မရပါဘူး။ Backend run ထားလား ပြန်စစ်ပေးပါ။");
+            alert("Failed to send message. Please try again.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -73,8 +85,12 @@ function Contact() {
                                 required
                             ></textarea>
                         </div>
-                        <button type="submit" className="btn btn-primary w-100 py-2">
-                            Send Message
+                        <button 
+                            type="submit" 
+                            className="btn btn-primary w-100 py-2"
+                            disabled={loading}
+                        >
+                            {loading ? 'Sending...' : 'Send Message'}
                         </button>
                     </form>
                 </div>
