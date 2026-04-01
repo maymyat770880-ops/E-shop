@@ -18,7 +18,7 @@ function Shop() {
                 const { data, error } = await supabase
                     .from('products')
                     .select('*');
-                
+
                 if (error) throw error;
                 console.log('Shop products:', data);
                 setProducts(data || []);
@@ -52,20 +52,20 @@ function Shop() {
     return (
         <div className="container my-5">
             <h2 className="fw-bold text-center mb-4">Our Tech Store</h2>
-            
+
             {/* Search Bar */}
             <div className="row justify-content-center mb-4">
                 <div className="col-md-6">
                     <div className="input-group shadow-sm" style={{ borderRadius: '25px', overflow: 'hidden', border: '2px solid #007bff' }}>
                         <span className="input-group-text bg-white border-0" style={{ paddingLeft: '20px' }}>
-                            <i className="bi bi-search text-primary"></i> 
+                            <i className="bi bi-search text-primary"></i>
                         </span>
-                        <input 
-                            type="text" 
-                            className="form-control border-0" 
-                            placeholder="🔍 Search for products..." 
-                            onChange={(e) => setSearchTerm(e.target.value)} 
-                            style={{ 
+                        <input
+                            type="text"
+                            className="form-control border-0"
+                            placeholder="🔍 Search for products..."
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{
                                 padding: '12px 20px 12px 0',
                                 boxShadow: 'none'
                             }}
@@ -75,16 +75,19 @@ function Shop() {
             </div>
 
             {/* Category Filter Buttons */}
-            <div className="text-center mb-5 gap-2">
-                {['All', 'Laptops', 'Smartphones', 'Accessories'].map(cat => (
-                    <button 
-                        key={cat}
-                        className={`btn mx-2 rounded-pill px-4 ${filter === cat ? 'btn-primary' : 'btn-outline-primary'}`} 
-                        onClick={() => setFilter(cat)}
-                    >
-                        {cat}
-                    </button>
-                ))}
+            {/* Category Filter Buttons */}
+            <div className="text-center mb-5">
+                <div className="category-buttons">
+                    {['All', 'Laptops', 'Smartphones', 'Accessories'].map(cat => (
+                        <button
+                            key={cat}
+                            className={`btn ${filter === cat ? 'btn-primary' : 'btn-outline-primary'} rounded-pill`}
+                            onClick={() => setFilter(cat)}
+                        >
+                            {cat}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* Products Grid */}
@@ -92,7 +95,7 @@ function Shop() {
                 <div className="col-12 mb-3">
                     <span className="text-muted">{filteredProducts.length} Products Available</span>
                 </div>
-                
+
                 {filteredProducts.length === 0 ? (
                     <div className="col-12 text-center py-5">
                         <p className="text-muted">No products found. Try a different search term or category.</p>
@@ -101,26 +104,26 @@ function Shop() {
                     filteredProducts.map(p => (
                         <div className="col-lg-3 col-md-6 mb-4 d-flex align-items-stretch" key={p.id}>
                             <div className="card product-card border-0 shadow-sm w-100 rounded-4">
-                                <img 
-                                    src={p.image || "https://via.placeholder.com/300x200"} 
-                                    className="card-img-top product-image rounded-top-4" 
-                                    alt={p.name} 
+                                <img
+                                    src={p.image || "https://via.placeholder.com/300x200"}
+                                    className="card-img-top product-image rounded-top-4"
+                                    alt={p.name}
                                     style={{ height: '200px', objectFit: 'cover' }}
                                 />
                                 <div className="card-body d-flex flex-column">
                                     <h6 className="fw-bold mb-1">{p.name}</h6>
                                     <p className="text-muted small mb-2">{p.category}</p>
                                     <h5 className="text-primary fw-bold mb-3">${p.price}</h5>
-                                    
+
                                     <div className="mt-auto">
-                                        <button 
-                                            className="btn btn-primary btn-sm w-100 mb-2 py-2 fw-bold" 
+                                        <button
+                                            className="btn btn-primary btn-sm w-100 mb-2 py-2 fw-bold"
                                             onClick={() => addToCart(p)}
                                         >
                                             Add to Cart
                                         </button>
-                                        <Link 
-                                            to={`/product/${p.id}`} 
+                                        <Link
+                                            to={`/product/${p.id}`}
                                             className="btn btn-outline-primary btn-sm w-100 py-2 fw-bold"
                                         >
                                             View Details

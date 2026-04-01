@@ -124,28 +124,29 @@ footer .nav-link:hover {
 .nav-link:hover {
     color: #000000 !important;
 }
-/* Mobile responsive for category buttons */
+/* Category buttons - Default for laptop/desktop */
+.category-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: nowrap;
+}
+
+.category-buttons .btn {
+    font-size: 14px;
+    padding: 8px 20px;
+    white-space: nowrap;
+}
+
+/* Mobile only (ဖုန်းအတွက်ပဲ) */
 @media (max-width: 768px) {
-    .btn-group-responsive {
-        display: flex;
+    .category-buttons {
         flex-wrap: wrap;
-        justify-content: center;
         gap: 8px;
     }
     
-    .btn-group-responsive .btn {
+    .category-buttons .btn {
         font-size: 12px;
         padding: 6px 12px;
-        white-space: nowrap;
-    }
-}
-
-/* Product grid for mobile */
-@media (max-width: 768px) {
-    .row {
-        margin: 0 -8px;
-    }
-    .col-md-4, .col-lg-3, .col-md-6 {
-        padding: 0 8px;
     }
 }
