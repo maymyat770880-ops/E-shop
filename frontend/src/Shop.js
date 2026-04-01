@@ -75,7 +75,7 @@ function Shop() {
             </div>
 
             {/* Category Filter Buttons */}
-            <div className="text-center mb-5">
+            <div className="text-center mb-5 gap-2">
                 {['All', 'Laptops', 'Smartphones', 'Accessories'].map(cat => (
                     <button 
                         key={cat}
