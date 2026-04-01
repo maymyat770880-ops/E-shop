@@ -1,96 +1,144 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import { supabase } from './supabaseClient';
 
 function ProductDetail({ addToCart }) {
     const { id } = useParams();
     const [product, setProduct] = useState(null);
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     // Review states
     const [reviews, setReviews] = useState([]);
     const [userName, setUserName] = useState("");
     const [comment, setComment] = useState("");
-    const [replyingTo, setReplyingTo] = useState(null); // ဘယ် comment id ကို reply ပြန်မလဲ သိဖို့
+    const [replyingTo, setReplyingTo] = useState(null);
+    const [rating, setRating] = useState(5);
 
+    // Fetch product from Supabase
+    const fetchProduct = async () => {
+        try {
+            console.log("Fetching product with ID:", id);
+            const { data, error } = await supabase
+                .from('products')
+                .select('*')
+                .eq('id', id)
+                .single();
+            
+            if (error) throw error;
+            setProduct(data);
+        } catch (err) {
+            console.error("Error fetching product:", err);
+            setError("Product not found or Server Error");
+        } finally {
+            setLoading(false);
+        }
+    };
+    // Fetch reviews from Supabase
     const fetchReviews = async () => {
         try {
-            const res = await axios.get(`https://e-shop-npm.vercel.app/api/reviews/${id}`);
-            setReviews(res.data);
+            const { data, error } = await supabase
+                .from('reviews')
+                .select('*')
+                .eq('product_id', id)
+                .order('created_at', { ascending: false });
+            
+            if (error) throw error;
+            setReviews(data || []);
         } catch (err) {
             console.log("Error fetching reviews:", err);
         }
     };
 
-    const [rating, setRating] = useState(5); // Default ကို ၅ ပွင့် ထားမယ်
-
-    // အရင်ရှိပြီးသား handleReviewSubmit ရဲ့ အောက်မှာ ဒါလေး ထည့်ပါ
+    // Submit review to Supabase
+    const handleReviewSubmit = async (e) => {
+        e.preventDefault();
+        if (!userName.trim() || !comment.trim()) {
+            alert("Please enter your name and comment");
+            return;
+        }
+        
+        try {
+            const { error } = await supabase
+                .from('reviews')
+                .insert([
+                    {
+                        product_id: parseInt(id),
+                        user_name: userName,
+                        comment: comment,
+                        rating: rating,
+                        parent_id: null,
+                        created_at: new Date().toISOString()
+                    }
+                ]);
+            
+            if (error) throw error;
+            
+            setComment("");
+            setUserName("");
+            setRating(5);
+            fetchReviews();
+        } catch (err) {
+            console.error("Error posting review:", err);
+            alert("Failed to post review. Please try again.");
+        }
+    };
+    // Submit reply to Supabase
     const handleReplySubmit = async (e, parentId) => {
         e.preventDefault();
+        if (!userName.trim() || !comment.trim()) {
+            alert("Please enter your name and reply");
+            return;
+        }
+        
         try {
-            await axios.post('https://e-shop-npm.vercel.app/api/reviews', {
-                product_id: id,
-                user_name: userName,
-                comment: comment,
-                parent_id: parentId // Reply ဖြစ်လို့ parent id ထည့်ပေးရမယ်
-            });
-            setComment(""); // စာရိုက်တဲ့ box ကို ရှင်းမယ်
-            setReplyingTo(null); // Reply box ကို ပြန်ပိတ်မယ်
-            fetchReviews(); // Review အသစ်တွေကို ပြန်ခေါ်မယ်
+            const { error } = await supabase
+                .from('reviews')
+                .insert([
+                    {
+                        product_id: parseInt(id),
+                        user_name: userName,
+                        comment: comment,
+                        rating: null,
+                        parent_id: parentId,
+                        created_at: new Date().toISOString()
+                    }
+                ]);
+            
+            if (error) throw error;
+            
+            setComment("");
+            setReplyingTo(null);
+            fetchReviews();
         } catch (err) {
-            console.log("Error posting reply:", err);
+            console.error("Error posting reply:", err);
+            alert("Failed to post reply. Please try again.");
         }
     };
 
     useEffect(() => {
-        console.log("Fetching product with ID:", id);
-        axios.get(`https://e-shop-npm.vercel.app/api/products/${id}`)
-            .then(res => {
-                setProduct(res.data);
-                fetchReviews(); // ပစ္စည်းရတာနဲ့ review ပါ တစ်ခါတည်းခေါ်မယ်
-            })
-            .catch(err => {
-                console.error("Error fetching product:", err);
-                setError("Product not found or Server Error");
-            });
-           // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [id]);
-   
+        fetchProduct();
+        fetchReviews();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id]);
 
-    const handleReviewSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            await axios.post('https://e-shop-npm.vercel.app/api/reviews', {
-                product_id: id,
-                user_name: userName,
-                comment: comment,
-                rating: rating,
-                parent_id: null
-            });
-            setComment("");
-            setUserName("")
-            fetchReviews();
-        } catch (err) {
-            console.log(err);
-        }
-    };
-
-    if (error) return <div className="container my-5 text-danger">{error}</div>;
-    if (!product) return <div className="container my-5">Loading...</div>;
-
-    // ပျမ်းမျှ rating တွက်တဲ့ logic
+    // Calculate average rating
     const averageRating = reviews.length > 0
         ? (reviews.reduce((acc, rev) => acc + (rev.rating || 5), 0) / reviews.length).toFixed(1)
         : 0;
 
+    if (loading) {
+        return <div className="container my-5 text-center py-5">Loading product details...</div>;
+    }
+
+    if (error) return <div className="container my-5 text-danger">{error}</div>;
+    if (!product) return <div className="container my-5">Product not found</div>;
 
     return (
         <div className="container my-5">
-            {/* Main Row: ပုံနဲ့ အချက်အလက်တွေကို ဘေးချင်းကပ်ရန် */}
+            {/* Main Row: Image and Info */}
             <div className="row mb-5">
-
-                {/* --- (၁) ဘယ်ဘက်ခြမ်း - ပစ္စည်း၏ပုံ (col-md-6) --- */}
+                {/* Left Column - Product Image */}
                 <div className="col-md-6 mb-4">
                     <img
                         src={product.image || "https://via.placeholder.com/500"}
@@ -100,23 +148,21 @@ function ProductDetail({ addToCart }) {
                     />
                 </div>
 
-                {/* --- (၂) ညာဘက်ခြမ်း - အချက်အလက်များ (col-md-6) --- */}
+                {/* Right Column - Product Info */}
                 <div className="col-md-6">
-
-                    {/* Rating အပိုင်း */}
+                    {/* Rating Section */}
                     <div className="d-flex align-items-center mb-3">
                         <div className="text-warning me-2">
                             {'★'.repeat(Math.round(averageRating))}{'☆'.repeat(5 - Math.round(averageRating))}
                         </div>
                         <span className="fw-bold">{averageRating} / 5</span>
-                        <span className="text-muted ms-2">({reviews ? reviews.length : 0} reviews)</span>
+                        <span className="text-muted ms-2">({reviews.length} reviews)</span>
                     </div>
 
-                    {/* နာမည်နှင့် ဈေးနှုန်း */}
+                    {/* Product Name and Price */}
                     <h1 className="fw-bold mb-2">{product.name}</h1>
                     <h3 className="text-primary fw-bold mb-4">${product.price}</h3>
-
-                    {/* Specifications & Description Box */}
+                    {/* Description Box */}
                     <div className="p-4 bg-light rounded-4 border mb-4 shadow-sm">
                         <h5 className="fw-bold border-bottom pb-2 mb-3">Specifications & Description</h5>
                         <p style={{ whiteSpace: 'pre-line', lineHeight: '1.7', color: '#555' }}>
@@ -134,25 +180,17 @@ function ProductDetail({ addToCart }) {
                         </button>
                     </div>
                 </div>
-
             </div>
-            {/* ဒီနေရာမှာ Review list တွေရှိရင် ဆက်ရေးလို့ရပါတယ် */}
-
 
             <hr />
 
-
-
-
-            {/* Review Section - Row ရဲ့ အပြင်ဘက်ကို ထုတ်လိုက်ပါပြီ */}
-
-
+            {/* Review Section */}
             <div className="mt-5">
                 <h3 className="mb-4">Customer Reviews ({reviews.length})</h3>
 
                 <div className="row">
                     <div className="col-lg-8">
-                        {/* Review Form (မူလအတိုင်း) */}
+                        {/* Review Form */}
                         <div className="card shadow-sm border-0 p-4 mb-4 bg-light">
                             <h5 className="mb-3">Leave a Review</h5>
                             <form onSubmit={handleReviewSubmit}>
@@ -197,11 +235,11 @@ function ProductDetail({ addToCart }) {
                             </form>
                         </div>
 
-                        {/* Review List (ဒီနေရာမှာ Reply Logic တွေ ညှပ်ထည့်ထားပါတယ်) */}
+                        {/* Review List */}
                         <div className="review-list">
                             {reviews.length > 0 ? (
                                 reviews.map((rev) => (
-                                    /* ၁။ မူရင်း Comment တွေကိုပဲ အရင်စစ်ထုတ်ပြီး ပြမယ် */
+                                    /* Only show parent comments (no parent_id) */
                                     !rev.parent_id && (
                                         <div key={rev.id} className="mb-4">
                                             {/* Parent Comment Card */}
@@ -212,10 +250,11 @@ function ProductDetail({ addToCart }) {
                                                         {new Date(rev.created_at).toLocaleDateString()}
                                                     </small>
                                                 </div>
-
-                                                <div className="mb-1 text-warning">
-                                                    {'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}
-                                                </div>
+                                                {rev.rating && (
+                                                    <div className="mb-1 text-warning">
+                                                        {'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}
+                                                    </div>
+                                                )}
                                                 <p className="mb-2 text-secondary">{rev.comment}</p>
 
                                                 <button
@@ -225,7 +264,7 @@ function ProductDetail({ addToCart }) {
                                                     Reply
                                                 </button>
 
-                                                {/* Reply Form - Reply ခလုတ်နှိပ်မှ ပေါ်လာမယ် */}
+                                                {/* Reply Form */}
                                                 {replyingTo === rev.id && (
                                                     <div className="mt-3 p-3 border-start border-4 border-primary bg-white shadow-sm">
                                                         <h6 className="small fw-bold">Replying to {rev.user_name}</h6>
@@ -254,7 +293,7 @@ function ProductDetail({ addToCart }) {
                                                 )}
                                             </div>
 
-                                            {/* ၂။ ဒီ Comment ရဲ့အောက်မှာ ရှိသမျှ Reply တွေကို အတွင်းဘက်တိုးပြီး ပြပေးမယ် */}
+                                            {/* Replies */}
                                             <div className="ms-5 mt-2">
                                                 {reviews
                                                     .filter((reply) => reply.parent_id === rev.id)
@@ -277,12 +316,9 @@ function ProductDetail({ addToCart }) {
                                 <p className="text-muted">No reviews yet. Be the first to review!</p>
                             )}
                         </div>
-
                     </div>
                 </div>
             </div>
-
-
         </div>
     );
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from './supabaseClient';
 
 function Admin() {
     // --- State Variables ---
@@ -11,9 +11,12 @@ function Admin() {
     const [category, setCategory] = useState('');
     const [products, setProducts] = useState([]);
     const [orders, setOrders] = useState([]);
-    const [messages, setMessages] = useState([]); // Customer Messages သိမ်းရန်
-
-
+    const [messages, setMessages] = useState([]);
+    const [allReviews, setAllReviews] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [isEditing, setIsEditing] = useState(false);
+    const [currentId, setCurrentId] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     const navigate = useNavigate();
 
@@ -25,14 +28,129 @@ function Admin() {
         }
     }, [navigate]);
 
-    const [isEditing, setIsEditing] = useState(false);
-    const [currentId, setCurrentId] = useState(null);
+    // ========== DATA FETCHING FUNCTIONS ==========
+    
+    // Fetch products from Supabase
+    const fetchProducts = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('products')
+                .select('*')
+                .order('id', { ascending: true });
+            
+            if (error) throw error;
+            setProducts(data || []);
+        } catch (err) {
+            console.error("Error fetching products:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+    // Fetch orders from Supabase
+    const fetchOrders = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('orders')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (error) throw error;
+            setOrders(data || []);
+        } catch (err) {
+            console.error("Error fetching orders:", err);
+        }
+    };
+
+    // Fetch messages from Supabase
+    const fetchMessages = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('contacts')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (error) throw error;
+            setMessages(data || []);
+        } catch (err) {
+            console.error("Error fetching messages:", err);
+        }
+    };
+
+    // Fetch all reviews from Supabase
+    const fetchAllReviews = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('reviews')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (error) throw error;
+            setAllReviews(data || []);
+        } catch (err) {
+            console.error("Error fetching reviews:", err);
+        }
+    };
+
+    // ========== PRODUCT CRUD ==========
+    
+    const resetForm = () => {
+        setName('');
+        setPrice('');
+        setDescription('');
+        setImage('');
+        setCategory('');
+        setIsEditing(false);
+        setCurrentId(null);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        const productData = {
+            name,
+            price: parseFloat(price),
+            description,
+            category: category || 'Accessories',
+            image: image || null
+        };
+
+        if (isEditing) {
+            // Update existing product
+            try {
+                const { error } = await supabase
+                    .from('products')
+                    .update(productData)
+                    .eq('id', currentId);
+                
+                if (error) throw error;
+                alert("Product Updated! ✅");
+                resetForm();
+                fetchProducts();
+            } catch (err) {
+                console.error("Error updating product:", err);
+                alert("Failed to update product");
+            }
+        } else {
+            // Add new product
+            try {
+                const { error } = await supabase
+                    .from('products')
+                    .insert([productData]);
+                
+                if (error) throw error;
+                alert("Product Added! 🚀");
+                resetForm();
+                fetchProducts();
+            } catch (err) {
+                console.error("Error adding product:", err);
+                alert("Failed to add product");
+            }
+        }
+    };
 
     const handleEdit = (product) => {
-        setIsEditing(true);         // Editing mode ထဲ ဝင်သွားပြီလို့ မှတ်မယ်
-        setCurrentId(product.id);   // ဘယ် ID ကို ပြင်မှာလဲဆိုတာ မှတ်ထားမယ်
-
-        // အောက်က နာမည်တွေက နင့်ရဲ့ Form input state နာမည်တွေနဲ့ တူရမယ်နော်
+        setIsEditing(true);
+        setCurrentId(product.id);
         setName(product.name);
         setPrice(product.price);
         setDescription(product.description);
@@ -40,158 +158,115 @@ function Admin() {
         setImage(product.image);
     };
 
-    const [searchTerm, setSearchTerm] = useState("");
-
-
-    const [allReviews, setAllReviews] = useState([]);
-    const fetchAllReviews = async () => {
-    const res = await axios.get('https://e-shop-npm.vercel.app/api/all-reviews');
-    setAllReviews(res.data);
-};
-const deleteReview = async (id) => {
-    if(window.confirm("Are you sure you want to delete this review?")) {
-        await axios.delete(`https://e-shop-npm.vercel.app/api/reviews/${id}`);
-        fetchAllReviews(); // list ကို refresh လုပ်မယ်
-    }
-};
-useEffect(()=>{
-    fetchAllReviews();
-},[]);
-
-
+    const deleteProduct = async (id) => {
+        if (window.confirm("Are you sure you want to delete this product?")) {
+            try {
+                const { error } = await supabase
+                    .from('products')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                alert("Deleted!");
+                fetchProducts();
+            } catch (err) {
+                console.error("Error deleting product:", err);
+                alert("Failed to delete product");
+            }
+        }
+    };
+    // ========== ORDER MANAGEMENT ==========
+    
     const updateOrderStatus = async (orderId, currentStatus) => {
         const newStatus = currentStatus === 'Pending' ? 'Delivered' : 'Pending';
-
+        
         try {
-            const response = await fetch(`https://e-shop-npm.vercel.app/api/orders/${orderId}/status`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus }),
-            });
-
-            if (response.ok) {
-                alert("Order Status Updated! ✅");
-                fetchOrders(); // ဇယားကို Refresh ပြန်လုပ်ဖို့ (နင့်ဆီမှာ order ခေါ်တဲ့ function နာမည် စစ်ပေးပါ)
-            }
-        } catch (error) {
-            console.error("Error:", error);
+            const { error } = await supabase
+                .from('orders')
+                .update({ status: newStatus })
+                .eq('id', orderId);
+            
+            if (error) throw error;
+            alert("Order Status Updated! ✅");
+            fetchOrders();
+        } catch (err) {
+            console.error("Error updating order:", err);
+            alert("Failed to update order status");
         }
     };
 
-    // --- Data Fetching Functions ---
-    const fetchProducts = () => {
-        axios.get('https://e-shop-npm.vercel.app/api/products')
-            .then(res => setProducts(res.data))
-            .catch(err => console.error("Error fetching products:", err));
+    // ========== MESSAGE MANAGEMENT ==========
+    
+    const markAsRead = async (id) => {
+        try {
+            const { error } = await supabase
+                .from('contacts')
+                .update({ is_read: true })
+                .eq('id', id);
+            
+            if (error) throw error;
+            fetchMessages();
+        } catch (err) {
+            console.error("Error marking as read:", err);
+        }
     };
 
-    const fetchOrders = () => {
-        axios.get('https://e-shop-npm.vercel.app/api/orders')
-            .then(res => setOrders(res.data))
-            .catch(err => console.error("Error fetching orders:", err));
+    const deleteMessage = async (id) => {
+        if (window.confirm("Are you sure you want to delete this message?")) {
+            try {
+                const { error } = await supabase
+                    .from('contacts')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                fetchMessages();
+            } catch (err) {
+                console.error("Error deleting message:", err);
+            }
+        }
     };
 
-    const fetchMessages = () => {
-        axios.get('https://e-shop-npm.vercel.app/api/messages')
-            .then(res => setMessages(res.data))
-            .catch(err => console.error("Error fetching messages:", err));
+    // ========== REVIEW MANAGEMENT ==========
+    
+    const deleteReview = async (id) => {
+        if (window.confirm("Are you sure you want to delete this review?")) {
+            try {
+                const { error } = await supabase
+                    .from('reviews')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                fetchAllReviews();
+            } catch (err) {
+                console.error("Error deleting review:", err);
+            }
+        }
     };
 
-    // Page စဖွင့်တာနဲ့ အချက်အလက်အားလုံးကို ယူမယ်
+    // ========== INITIAL DATA LOAD ==========
     useEffect(() => {
         fetchProducts();
         fetchOrders();
         fetchMessages();
+        fetchAllReviews();
     }, []);
 
-    const resetForm = () => {
-        setName('');
-        setPrice('');
-        setDescription('');
-        setImage('');
-        setIsEditing(false);
-        setCurrentId(null);
-    };
-
-   
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const productData = { name, price, description, category, image };
-
-
-        if (isEditing) {
-            // --- (၁) Edit လုပ်မည့်အပိုင်း (PUT) ---
-            try {
-                const response = await fetch(`https://e-shop-npm.vercel.app/api/products/${currentId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(productData),
-                });
-                if (response.ok) {
-                    alert("Product Updated! ✅");
-                    resetForm();
-                    fetchProducts(); // Shop မှာ ချက်ချင်းပြောင်းသွားအောင်
-                }
-            } catch (err) { console.log(err); }
-
-        } else {
-            // --- (၂) ဒီနေရာမှာ နင့်ရဲ့ မူရင်း Upload code ကို ထည့်ရမှာပါ (POST) ---
-            try {
-                const response = await fetch('https://e-shop-npm.vercel.app/api/products', {
-                    method: 'POST', // အသစ်ထည့်တာဖြစ်လို့ POST သုံးထားတာကို ရှာပါ
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(productData),
-                });
-                if (response.ok) {
-                    alert("Product Added! 🚀");
-                    resetForm();
-                    fetchProducts();
-                }
-            } catch (err) { console.log(err); }
-        }
-    };
-
-    const deleteProduct = (id) => {
-        if (window.confirm("Are you sure you want to delete this product?")) {
-            axios.delete(`https://e-shop-npm.vercel.app/api/products/${id}`)
-                .then(() => {
-                    alert("Deleted!");
-                    fetchProducts();
-                })
-                .catch(err => console.error("Error deleting product:", err));
-        }
-    };
-
-    // Mark as Read လုပ်ဖို့
-    const markAsRead = async (id) => {
-        try {
-            const response = await fetch(`https://e-shop-npm.vercel.app/api/contacts/${id}/read`, { method: 'PUT' });
-            if (response.ok) fetchMessages(); // data ပြန်ခေါ်ဖို့
-        } catch (err) { console.log(err); }
-    };
-
-    // Message ဖျက်ဖို့
-    const deleteMessage = async (id) => {
-        if (window.confirm("Are you sure you want to delete this?")) {
-            try {
-                const response = await fetch(`https://e-shop-npm.vercel.app/api/contacts/${id}`, { method: 'DELETE' });
-                if (response.ok) fetchMessages();
-            } catch (err) { console.log(err); }
-        }
-    };
-
+    // ========== LOGOUT ==========
     const handleLogout = () => {
         localStorage.removeItem('isAuthenticated');
         navigate('/login');
     };
 
-     // ပစ္စည်းနာမည်နဲ့ တိုက်စစ်ပြီး Filter လုပ်တာ
+    // Filter products by search term
     const filteredProducts = products.filter((product) =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase())
+        product.name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    
+    if (loading) {
+        return <div className="container my-5 text-center py-5">Loading admin dashboard...</div>;
+    }
 
     return (
         <div className="container mt-5 mb-5">
@@ -207,16 +282,34 @@ useEffect(()=>{
                         <div className="card-header bg-dark text-white font-weight-bold">Add New Product</div>
                         <div className="card-body">
                             <form onSubmit={handleSubmit}>
-                                <input type="text" className="form-control mb-2" placeholder="Product Name" value={name} onChange={(e) => setName(e.target.value)} required />
-                                <input type="number" className="form-control mb-2" placeholder="Price" value={price} onChange={(e) => setPrice(e.target.value)} required />
-                                <textarea className="form-control mb-2" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} required></textarea>
-                                {/* Product Name, Price, Description တွေရဲ့ အောက်နားမှာ ဒါလေး ထည့်ပါ */}
-
+                                <input 
+                                    type="text" 
+                                    className="form-control mb-2" 
+                                    placeholder="Product Name" 
+                                    value={name} 
+                                    onChange={(e) => setName(e.target.value)} 
+                                    required 
+                                />
+                                <input 
+                                    type="number" 
+                                    className="form-control mb-2" 
+                                    placeholder="Price" 
+                                    value={price} 
+                                    onChange={(e) => setPrice(e.target.value)} 
+                                    required 
+                                />
+                                <textarea 
+                                    className="form-control mb-2" 
+                                    placeholder="Description" 
+                                    value={description} 
+                                    onChange={(e) => setDescription(e.target.value)} 
+                                    required 
+                                />
+                                
                                 <select 
-                                   
-                                    className='form-select mb-2'
+                                    className="form-select mb-2"
                                     onChange={(e) => setCategory(e.target.value)}
-                                   value={category}
+                                    value={category}
                                 >
                                     <option value="">-- Select Category --</option>
                                     <option value="Laptops">Laptops</option>
@@ -224,47 +317,66 @@ useEffect(()=>{
                                     <option value="Accessories">Accessories</option>
                                 </select>
 
-
-
-                                <input type="text" className="form-control mb-2" placeholder="Image URL" value={image} onChange={(e) => setImage(e.target.value)} />
+                                <input 
+                                    type="text" 
+                                    className="form-control mb-2" 
+                                    placeholder="Image URL" 
+                                    value={image} 
+                                    onChange={(e) => setImage(e.target.value)} 
+                                />
                                 <button type="submit" className="btn btn-primary">
                                     {isEditing ? "Update Product" : "Upload Product"}
                                 </button>
+                                {isEditing && (
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-secondary ms-2" 
+                                        onClick={resetForm}
+                                    >
+                                        Cancel
+                                    </button>
+                                )}
                             </form>
                         </div>
                     </div>
 
                     <div className="card shadow-sm border-0 mb-4">
                         <div className="card-header bg-secondary text-white font-weight-bold">Manage Products</div>
-                        <ul className="list-group list-group-flush" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                        <div className="card-body">
                             <input
                                 type="text"
-                                className="form-control mb-3"
-                                placeholder="Search products by name..."
+                                className="form-control mb-3"placeholder="Search products by name..."
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
-                            {filteredProducts.map(p => (
-                                <li key={p.id} className="list-group-item d-flex justify-content-between align-items-center">
-                                    <span className="text-truncate" style={{ maxWidth: '150px' }}>{p.name} - ${p.price}</span>
-                                    <button onClick={() => deleteProduct(p.id)} className="btn btn-sm btn-danger me-2">Delete</button>
-
-                                    <button
-                                        className="btn btn-warning btn-sm me-2"
-                                        onClick={() => handleEdit(p)}
-                                    >
-                                        Edit
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
+                            <ul className="list-group list-group-flush" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                {filteredProducts.map(p => (
+                                    <li key={p.id} className="list-group-item d-flex justify-content-between align-items-center">
+                                        <span className="text-truncate" style={{ maxWidth: '150px' }}>
+                                            {p.name} - ${p.price}
+                                        </span>
+                                        <div className='d-flex gap-2'>
+                                            <button 
+                                                onClick={() => handleEdit(p)} 
+                                                className="btn btn-warning btn-sm me-2"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button 
+                                                onClick={() => deleteProduct(p.id)} 
+                                                className="btn btn-danger btn-sm"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
                     </div>
-
-
-
                 </div>
 
                 {/* --- Right Column: Orders & Messages --- */}
-                <div className="col-md-7">
+                <div className="col-md-8">
                     {/* Customer Orders Table */}
                     <div className="card shadow-sm border-0 mb-4">
                         <div className="card-header bg-success text-white d-flex justify-content-between align-items-center">
@@ -280,10 +392,10 @@ useEffect(()=>{
                                             <th>Customer</th>
                                             <th>Phone</th>
                                             <th>Total</th>
+                                            <th>Status</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        {orders.length > 0 ? orders.map((order) => (
+                                    <tbody>{orders.length > 0 ? orders.map((order) => (
                                             <tr key={order.id}>
                                                 <td>{order.id}</td>
                                                 <td>{order.customer_name}</td>
@@ -291,7 +403,7 @@ useEffect(()=>{
                                                 <td className="text-success fw-bold">${order.total_price}</td>
                                                 <td>
                                                     <button
-                                                        className={order.status === 'Pending' ? "btn btn-warning" : "btn btn-success"}
+                                                        className={order.status === 'Pending' ? "btn btn-warning btn-sm" : "btn btn-success btn-sm"}
                                                         onClick={() => updateOrderStatus(order.id, order.status)}
                                                     >
                                                         {order.status}
@@ -300,7 +412,7 @@ useEffect(()=>{
                                             </tr>
                                         )) : (
                                             <tr>
-                                                <td colSpan="4" className="py-4 text-muted">No orders available yet.</td>
+                                                <td colSpan="5" className="py-4 text-muted">No orders available yet.</td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -338,8 +450,7 @@ useEffect(()=>{
                                                             <button
                                                                 className="btn btn-sm btn-info text-white"
                                                                 onClick={() => markAsRead(msg.id)}
-                                                            >
-                                                                Mark Read
+                                                            >Mark Read
                                                             </button>
                                                         )}
                                                         <button
@@ -351,48 +462,58 @@ useEffect(()=>{
                                                     </div>
                                                 </td>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-
-
+                                        ))}</tbody>
+                                        </table>
                             </div>
                         </div>
                     </div>
 
-
+                    {/* Customer Reviews Table */}
                     <div className="card mt-4 shadow-sm border-0">
-    <div className="card-header bg-danger text-white fw-bold">Manage Customer Reviews 💬</div>
-    <div className="card-body">
-        <table className="table table-hover">
-            <thead>
-                <tr>
-                    <th>User</th>
-                    <th>Comment</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {allReviews.map((rev) => (
-                    <tr key={rev.id}>
-                        <td>{rev.user_name}</td>
-                        <td className="small text-muted">{rev.comment}</td>
-                        <td>
-                            <button className="btn btn-sm btn-outline-danger" onClick={() => deleteReview(rev.id)}>Delete</button>
-                        </td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
-    </div>
-</div>
-
-
-
+                        <div className="card-header bg-danger text-white fw-bold">Manage Customer Reviews 💬</div>
+                        <div className="card-body">
+                            <div className="table-responsive">
+                                <table className="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Product ID</th>
+                                            <th>Rating</th>
+                                            <th>Comment</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {allReviews.length > 0 ? allReviews.map((rev) => (
+                                            <tr key={rev.id}>
+                                                <td>{rev.user_name}</td>
+                                                <td>{rev.product_id}</td>
+                                                <td>{rev.rating ? '⭐'.repeat(rev.rating) : '-'}</td>
+                                                <td className="small text-muted" style={{ maxWidth: '200px' }}>
+                                                    {rev.comment?.substring(0, 50)}...
+                                                </td>
+                                                <td>
+                                                    <button 
+                                                        className="btn btn-sm btn-outline-danger" 
+                                                        onClick={() => deleteReview(rev.id)}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        )) : (
+                                            <tr>
+                                                <td colSpan="5" className="text-center text-muted">No reviews yet.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
     );
 }
 
