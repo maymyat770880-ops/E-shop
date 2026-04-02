@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, NavLink, Link, useNavigate } from 'react-router-dom';
 import Home from './Home';
 import Admin from './Admin';
-import Login from './Login';
+import AdminLogin from './AdminLogin';
 import Contact from './Contact';
 import { useCart } from './CartContext';
 import CartPage from './CartPage';
@@ -12,28 +12,31 @@ import ProductDetail from './ProductDetail';
 import ServiceDetail from './ServiceDetail';
 import User from './User';
 import ThankYou from './ThankYou';
+import Register from './Register';
+import UserLogin from './UserLogin';
 
 function App() {
   const { cartItems, addToCart } = useCart();
   const navigate = useNavigate();
   const [userData, setUserData] = useState(null);
 
+  // Load user data from localStorage
   useEffect(() => {
-    const loggedInUser = localStorage.getItem('user');
-    if (loggedInUser) {
-      setUserData(JSON.parse(loggedInUser));
+    const isLoggedIn = localStorage.getItem('userLoggedIn');
+    const username = localStorage.getItem('username');
+    console.log("isLoggedIn:", isLoggedIn, "username:", username); // Debug
+    if (isLoggedIn === 'true' && username) {
+      setUserData({ name: username });
     }
-  }, []);
-
-  
+  }, []); // 👈 page load ချိန်မှာ တစ်ခါပဲ run မယ်
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('userLoggedIn');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('username');
     setUserData(null);
-    alert("Logged out successfully");
-    navigate('/');
-    window.location.reload();
+    alert('Logged out successfully');
+    navigate('/'); // 👈 window.location.href အစား navigate သုံးပါ
   };
 
   return (
@@ -62,22 +65,39 @@ function App() {
                     {cartItems.length}
                   </span>
                 )}
-
               </NavLink>
-              <NavLink to="/Login" className={({ isActive }) => isActive ? "nav-link active-link" : "nav-link"}>Admin</NavLink>
+              
+              <NavLink to="/admin-login" className={({ isActive }) => isActive ? "nav-link active-link" : "nav-link"}>Admin</NavLink>
 
               {/* Login/Logout Logic */}
               {userData ? (
                 <div className="d-flex align-items-center ms-lg-3">
                   <span className="me-3 fw-bold text-primary">Hi, {userData.name}</span>
-                  <button className="btn btn-outline-danger px-4 py-2 fw-bold" style={{ borderRadius: '10px' }} onClick={handleLogout}>
+                  <button 
+                    className="btn btn-outline-danger px-4 py-2 fw-bold" 
+                    style={{ borderRadius: '10px' }} 
+                    onClick={handleLogout}
+                  >
                     Logout
                   </button>
                 </div>
               ) : (
-                <Link className="btn btn-dark px-4 py-2 ms-2 fw-bold" style={{ borderRadius: '10px' }} to="/User">
-                  Login / Register
-                </Link>
+                <div className="d-flex gap-2 ms-lg-3">
+                  <Link 
+                    className="btn btn-outline-primary px-4 py-2 fw-bold" 
+                    style={{ borderRadius: '10px' }} 
+                    to="/user-login"
+                  >
+                    Login
+                  </Link>
+                  <Link 
+                    className="btn btn-primary px-4 py-2 fw-bold" 
+                    style={{ borderRadius: '10px' }} 
+                    to="/register"
+                  >
+                    Register
+                  </Link>
+                </div>
               )}
             </div>
           </div>
@@ -92,21 +112,20 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/admin" element={<Admin />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/admin-login" element={<AdminLogin />} />
           <Route path='/product/:id' element={<ProductDetail addToCart={addToCart} />} />
           <Route path='/service/:id' element={<ServiceDetail />} />
           <Route path='/User' element={<User />} />
-          <Route path='/thank-you' element={<ThankYou/>}/>
+          <Route path='/thank-you' element={<ThankYou />} />
+          <Route path='/register' element={<Register />} />
+          <Route path='/user-login' element={<UserLogin />} />
         </Routes>
       </div>
 
-      {/* Footer (သင်အလိုရှိတဲ့ ပထမပုံစံအတိုင်း ပြန်ပြင်ထားပါတယ်) */}
-
-      {/* Footer အသစ် - ပိုပြီး Compact ဖြစ်အောင် ပြင်ထားပါတယ် */}
+      {/* Footer */}
       <footer className="bg-dark text-white pt-4 pb-2 mt-auto">
         <div className="container">
           <div className="row">
-            {/* Brand Section */}
             <div className="col-md-4 mb-3">
               <h6 className="fw-bold text-white mb-2">CYBER GADGETS</h6>
               <p style={{ fontSize: '13px' }} className="text-white-50">
@@ -114,18 +133,16 @@ function App() {
               </p>
             </div>
 
-            {/* Quick Links Section */}
             <div className="col-md-4 mb-3 text-center">
               <h6 className="fw-bold text-white mb-2">Quick Links</h6>
               <div className="d-flex justify-content-center gap-3" style={{ fontSize: '13px' }}>
                 <Link className="text-white-50 text-decoration-none" to="/">Home</Link>
                 <Link className="text-white-50 text-decoration-none" to="/shop">Shop</Link>
                 <Link className="text-white-50 text-decoration-none" to="/contact">Contact</Link>
-                <Link className="text-white-50 text-decoration-none" to="/login">Admin</Link>
+                <Link className="text-white-50 text-decoration-none" to="/admin-login">Admin</Link>
               </div>
             </div>
 
-            {/* About/Copyright Section */}
             <div className="col-md-4 mb-3 text-md-end text-center">
               <h6 className="fw-bold text-white mb-2">Connect</h6>
               <p style={{ fontSize: '12px' }} className="text-white-50 mb-0">
@@ -133,8 +150,6 @@ function App() {
               </p>
             </div>
           </div>
-
-          {/* Line အသေးလေးတစ်ခု ထပ်ထည့်မယ် */}
           <hr className="bg-secondary mt-2 mb-2" style={{ opacity: '0.2' }} />
         </div>
       </footer>
