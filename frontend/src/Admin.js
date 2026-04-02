@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from './supabaseClient';
 
 function Admin() {
-    // --- State Variables ---
     const [name, setName] = useState('');
     const [price, setPrice] = useState('');
     const [description, setDescription] = useState('');
@@ -30,7 +29,6 @@ function Admin() {
 
     // ========== DATA FETCHING FUNCTIONS ==========
     
-    // Fetch products from Supabase
     const fetchProducts = async () => {
         try {
             const { data, error } = await supabase
@@ -46,6 +44,10 @@ function Admin() {
             setLoading(false);
         }
     };
+    
+    // ... ကျန်တဲ့ code အားလုံး ဆက်ရေးပါ
+
+    // ... ကျန်တဲ့ code အားလုံး ဒီအောက်မှာ ဆက်ရေးပါ
     // Fetch orders from Supabase
     const fetchOrders = async () => {
         try {
